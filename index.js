@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 
 // CORS configuration
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const allowedOrigins = ['https://crms-frontend.onrender.com'];
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
