@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const Book = require('./models/bookmodel');
 const authRoutes = require('./routes/routes');
-
+const authToken=require('./(auth)/middleware/authtoken')
 dotenv.config();
 
 const app = express();
@@ -154,7 +154,7 @@ console.log("finalDowl",finalDownloadUrl)
  
  // Download route
    // Backend Code (Ensure it matches the React client logic)
-   app.get("/download/:bookId", async (req, res) => {
+   app.get("/download/:bookId", authToken,async (req, res) => {
     const { bookId } = req.params;
     try {
       const book = await Book.findById(bookId);
