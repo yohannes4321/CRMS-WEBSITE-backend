@@ -15,7 +15,7 @@ dotenv.config();
 const app = express();
 
 // CORS configuration
-const allowedOrigins = ['https://crms-frontend.onrender.com'];
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -154,7 +154,7 @@ console.log("finalDowl",finalDownloadUrl)
  
  // Download route
    // Backend Code (Ensure it matches the React client logic)
-   app.get("/download/:bookId", authToken,async (req, res) => {
+   app.get("/download/:bookId",async (req, res) => {
     const { bookId } = req.params;
     try {
       const book = await Book.findById(bookId);
