@@ -8,7 +8,11 @@ const bookSchema = new mongoose.Schema({
   description:{
     type:String,
   },
-  url: {
+  uploadedUrl: {
+    type: String,
+    required: true,
+  },
+  finalDownloadUrl: {
     type: String,
     required: true,
   },
