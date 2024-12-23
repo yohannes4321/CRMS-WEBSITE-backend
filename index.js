@@ -16,7 +16,7 @@ dotenv.config();
 const app = express();
 
 // CORS configuration
-const allowedOrigins = ['https://covenant-reformed-ministry-ethiopia.onrender.com'];
+const allowedOrigins = ['*'];
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
