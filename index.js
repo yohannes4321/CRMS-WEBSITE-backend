@@ -16,19 +16,20 @@ dotenv.config();
 const app = express();
 
 // CORS configuration
-const allowedOrigins = ['*'];
-const corsOptions = {
-  origin: function (origin, callback) {
+const allowedOrigins = ['https://covenant-reformed-ministry-ethiopia.onrender.com'];
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., mobile apps, curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      return callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
-};
-app.use(cors(corsOptions));
+  credentials: true // Enable credentials (cookies, authentication tokens, etc.)
+}));
+ 
 app.use(express.json());
 app.use('/api', authRoutes);
 
