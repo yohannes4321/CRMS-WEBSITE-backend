@@ -9,8 +9,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const Book = require('./models/bookmodel');
 const authRoutes = require('./routes/routes');
-const authToken=require('./(auth)/middleware/authtoken')
-const AdminToken=require('./(auth)/middleware/adminauthtoken')
+const authToken = require('./(auth)/middleware/authtoken');
+const AdminToken = require('./(auth)/middleware/adminauthtoken');
 dotenv.config();
 
 const app = express();
@@ -38,6 +38,7 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
 // Configure multer for custom file naming and temporary storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -63,7 +64,6 @@ const upload = multer({
   }
 });
 
-
 // Helper function to upload file to Cloudinary
 const uploadFileToCloudinary = async (filePath, fileName) => {
   try {
@@ -80,6 +80,8 @@ const uploadFileToCloudinary = async (filePath, fileName) => {
     fs.unlinkSync(filePath);
   }
 };
+
+// Upload route
 app.post('/upload', AdminToken, upload.single('file'), async (req, res) => {
   // Check if file is uploaded
   if (!req.file) {
@@ -146,80 +148,76 @@ app.post('/upload', AdminToken, upload.single('file'), async (req, res) => {
   }
 });
 
- // Get all books
- app.get('/books', async (req, res) => {
-   try {
-     const books = await Book.find();
-     res.json(books);
-   } catch (error) {
-     console.error(error.message);
-     res.status(500).json({ message: 'Error fetching books' });
-   }
- });
- 
- // Download route
-   // Backend Code (Ensure it matches the React client logic)
-   app.get("/download/:bookId", authToken, async (req, res) => {
-    const { bookId } = req.params;
-  
-    try {
-      // Find the book by ID
-      const book = await Book.findById(bookId);
-  
-      // Check if the book exists
-      if (!book) {
-        return res.status(404).json({
-          message: "Book not found",
-        });
-      }
-  
-      // Check if the book has a final download URL
-      if (!book.finalDownloadUrl) {
-        return res.status(400).json({
-          message: "No download URL available for this book",
-        });
-      }
-  
-      // Send response with the download URL
-      res.json({
-        message: "You are logged in and authorized to download.",
-        downloadUrl: book.finalDownloadUrl,
-      });
-    } catch (error) {
-      // Log the error and send a server error response
-      console.error("Error fetching book details:", error.message);
-      res.status(500).json({
-        message: "Server error",
-        error: error.message,
+// Get all books
+app.get('/books', async (req, res) => {
+  try {
+    const books = await Book.find();
+    res.json(books);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Error fetching books' });
+  }
+});
+
+// Download route
+app.get("/download/:bookId", authToken, async (req, res) => {
+  const { bookId } = req.params;
+
+  try {
+    // Find the book by ID
+    const book = await Book.findById(bookId);
+
+    // Check if the book exists
+    if (!book) {
+      return res.status(404).json({
+        message: "Book not found",
       });
     }
-  });
-  
 
- 
- // MongoDB connection
- const connectToMongoDB = async () => {
-   try {
-     const mongoURI = process.env.MONGO_DB_URI;
-     await mongoose.connect(mongoURI, {
-       useNewUrlParser: true,
-       useUnifiedTopology: true,
-     });
-     console.log('MongoDB connected successfully');
-   } catch (error) {
-     console.error(`MongoDB connection error: ${error.message}`);
-     process.exit(1);
-   }
- };
- 
- // Start the server
- const startServer = async () => {
-   await connectToMongoDB();
-   const PORT = process.env.PORT || 8000;
-   app.listen(PORT, () => {
-     console.log(`Server is running on port ${PORT}`);
-   });
- };
- 
- startServer();
- 
+    // Check if the book has a final download URL
+    if (!book.finalDownloadUrl) {
+      return res.status(400).json({
+        message: "No download URL available for this book",
+      });
+    }
+
+    // Send response with the download URL
+    res.json({
+      message: "You are logged in and authorized to download.",
+      downloadUrl: book.finalDownloadUrl,
+    });
+  } catch (error) {
+    // Log the error and send a server error response
+    console.error("Error fetching book details:", error.message);
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
+
+// MongoDB connection
+const connectToMongoDB = async () => {
+  try {
+    const mongoURI = process.env.MONGO_DB_URI;
+    await mongoose.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error(`MongoDB connection error: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+// Start the server
+const startServer = async () => {
+  await connectToMongoDB();
+  const PORT = process.env.PORT || 8000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+};
+
+startServer();
