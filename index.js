@@ -10,6 +10,7 @@ const cors = require('cors');
 const Book = require('./models/bookmodel');
 const authRoutes = require('./routes/routes');
 const authToken=require('./(auth)/middleware/authtoken')
+const AdminToken=require('./(auth)/middleware/adminauthtoken')
 dotenv.config();
 
 const app = express();
@@ -79,68 +80,72 @@ const uploadFileToCloudinary = async (filePath, fileName) => {
     fs.unlinkSync(filePath);
   }
 };
-
-// Route to handle file upload
-app.post('/upload', upload.single('file'), async (req, res) => {
+app.post('/upload', AdminToken, upload.single('file'), async (req, res) => {
   // Check if file is uploaded
   if (!req.file) {
     return res.status(400).json({
       statusCode: 400,
-      message: 'No file uploaded'
+      message: 'No file uploaded',
     });
   }
 
   try {
-    // Use custom file name if provided, otherwise default to uploaded file's original name
+    // Use custom file name if provided, otherwise default to the uploaded file's original name
     const customFileName = req.body.fileName || path.parse(req.file.originalname).name;
-console.log("custumfilename",customFileName)
+    console.log("customFileName:", customFileName);
+
     // Upload file to Cloudinary
     const uploadedUrl = await uploadFileToCloudinary(req.file.path, customFileName);
- console.log("uploaded url",uploadedUrl)
+    console.log("uploadedUrl:", uploadedUrl);
 
-
-
- 
+    // Extract description and download URL from the request body
     const description = req.body.description;
     const downloadUrl = req.body.url;
-    console.log("des",description)
+    console.log("description:", description);
 
+    // Function to extract the file ID from the Google Drive download URL
     const extractFileId = (downloadUrl) => {
       const regex = /\/d\/([a-zA-Z0-9_-]+)/; // Regular expression to match the file ID
       const match = downloadUrl.match(regex);
       return match ? match[1] : null; // Return the file ID if found, otherwise return null
     };
 
+    // Generate the final download URL
     const fileId = downloadUrl ? extractFileId(downloadUrl) : null;
-    const finalDownloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}` ;
-console.log("finalDowl",finalDownloadUrl)
-  const newBook = new Book({
+    const finalDownloadUrl = fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : null;
+    console.log("finalDownloadUrl:", finalDownloadUrl);
+
+    // Create a new Book instance
+    const newBook = new Book({
       filename: customFileName,
       uploadedUrl: uploadedUrl, // Cloudinary URL
       description,
       finalDownloadUrl: finalDownloadUrl,
     });
-    console.log("BOOK",newBook)
+    console.log("Book:", newBook);
 
+    // Save the book to the database
     await newBook.save();
-
 
     // Return success response
     res.status(200).json({
       statusCode: 200,
       message: 'File uploaded successfully',
-      data: { url: uploadedUrl }
+      data: {
+        url: uploadedUrl,
+      },
     });
   } catch (error) {
     // Handle upload errors
+    console.error("Error during file upload:", error.message);
     res.status(500).json({
       statusCode: 500,
       message: 'Error uploading file',
-      error: error.message
+      error: error.message,
     });
   }
 });
- 
+
  // Get all books
  app.get('/books', async (req, res) => {
    try {
@@ -154,20 +159,39 @@ console.log("finalDowl",finalDownloadUrl)
  
  // Download route
    // Backend Code (Ensure it matches the React client logic)
-   app.get("/download/:bookId",async (req, res) => {
+   app.get("/download/:bookId", authToken, async (req, res) => {
     const { bookId } = req.params;
+  
     try {
+      // Find the book by ID
       const book = await Book.findById(bookId);
+  
+      // Check if the book exists
       if (!book) {
-        return res.status(404).json({ message: "Book not found" });
+        return res.status(404).json({
+          message: "Book not found",
+        });
       }
+  
+      // Check if the book has a final download URL
       if (!book.finalDownloadUrl) {
-        return res.status(400).json({ message: "No download URL available for this book" });
+        return res.status(400).json({
+          message: "No download URL available for this book",
+        });
       }
-      res.json({ downloadUrl: book.finalDownloadUrl });
+  
+      // Send response with the download URL
+      res.json({
+        message: "You are logged in and authorized to download.",
+        downloadUrl: book.finalDownloadUrl,
+      });
     } catch (error) {
+      // Log the error and send a server error response
       console.error("Error fetching book details:", error.message);
-      res.status(500).json({ message: "Server error", error: error.message });
+      res.status(500).json({
+        message: "Server error",
+        error: error.message,
+      });
     }
   });
   

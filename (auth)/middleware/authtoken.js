@@ -1,4 +1,3 @@
-// authToken.js (middleware)
 const jwt = require('jsonwebtoken');
 
 async function authToken(req, res, next) {
@@ -15,7 +14,7 @@ async function authToken(req, res, next) {
       });
     }
 
-    jwt.verify(token, process.env.TOKEN_SECRET_KEY, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
         console.error("JWT verification error:", err);
         return res.status(403).json({
