@@ -8,9 +8,9 @@ const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const Book = require('./models/bookmodel');
-const authRoutes = require('./routes/routes');
-const authToken = require('./(auth)/middleware/authtoken');
-const AdminToken = require('./(auth)/middleware/adminauthtoken');
+const authRoutes = require('./routes');
+//const authToken = require('./(auth)/middleware/authtoken');
+//const AdminToken = require('./(auth)/middleware/adminauthtoken');
 dotenv.config();
 
 const app = express();
@@ -75,7 +75,7 @@ const uploadFileToCloudinary = async (filePath, fileName) => {
 };
 
 // Upload route
-app.post('/upload', AdminToken, upload.single('file'), async (req, res) => {
+app.post('/upload', upload.single('file'), async (req, res) => {
   // Check if file is uploaded
   if (!req.file) {
     return res.status(400).json({
@@ -153,7 +153,7 @@ app.get('/books', async (req, res) => {
 });
 
 // Download route
-app.get("/download/:bookId", authToken, async (req, res) => {
+app.get("/download/:bookId", async (req, res) => {
   const { bookId } = req.params;
 
   try {
