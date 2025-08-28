@@ -57,22 +57,23 @@ const upload = multer({
   }
 });
 
-// Helper function to upload file to Cloudinary
 const uploadFileToCloudinary = async (filePath, fileName) => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
-      folder: "pdfs", // Specify folder for PDFs
-      resource_type: "raw", // Treat as a raw file
-      public_id: fileName // Use custom file name for Cloudinary
+      folder: "pdfs",
+      resource_type: "raw",
+      public_id: fileName
     });
-    return result.secure_url; // Return the secure URL of the uploaded file
+    return result.secure_url;
   } catch (error) {
     throw new Error('Error uploading to Cloudinary: ' + error.message);
   } finally {
-    // Clean up temporary file
-    fs.unlinkSync(filePath);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
   }
 };
+
 
 // Upload route
 app.post('/upload', upload.single('file'), async (req, res) => {
@@ -135,7 +136,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     console.error("Error during file upload:", error.message);
     res.status(500).json({
       statusCode: 500,
-      message: error.message,//edit this 
+      message: 'Error uploading file',
       
       error: error.message,
     });
