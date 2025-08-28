@@ -17,7 +17,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'https://crms-website-backend.onrender.com', // This allows requests from any domain
+  origin: 'https://covenant-reformed-ministry-ethiopia.onrender.com', // This allows requests from any domain
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
 };
@@ -27,9 +27,9 @@ app.use('/api', authRoutes);
 
 // Cloudinary configuration
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: "di5zfjqlt",
+  api_key: "925212267277656",
+  api_secret: "oqaNDaluW1CD-Zrk754j-s-9oLc",
 });
 
 // Configure multer for custom file naming and temporary storage
@@ -136,6 +136,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     res.status(500).json({
       statusCode: 500,
       message: 'Error uploading file',
+      
       error: error.message,
     });
   }
