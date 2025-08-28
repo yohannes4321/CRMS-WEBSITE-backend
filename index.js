@@ -135,7 +135,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     console.error("Error during file upload:", error.message);
     res.status(500).json({
       statusCode: 500,
-      message: 'Error uploading file',
+      message: error.message,//edit this 
       
       error: error.message,
     });
