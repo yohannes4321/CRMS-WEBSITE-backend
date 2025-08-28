@@ -192,7 +192,7 @@ app.get("/download/:bookId", async (req, res) => {
 // MongoDB connection
 const connectToMongoDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_DB_URI;
+    const mongoURI ="mongodb+srv://alemuyohannes960:Ethiopia32100@cluster0.qd8t5as.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0";
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
