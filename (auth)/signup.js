@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "jesusislord";
 router.post('/signup', async (req, res) => {
   try {
     const { fullname, email, password, role } = req.body;
-
+    console.log(fullname)
     // Validate input
     if (!fullname || !email || !password) {
       return res.status(400).json({ message: 'All fields are required.' });

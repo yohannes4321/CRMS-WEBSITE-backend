@@ -17,7 +17,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'https://covenant-reformed-ministry-ethiopia.onrender.com', // This allows requests from any domain https://covenant-reformed-ministry-ethiopia.onrender.com
+  origin: 'http://localhost:3000', // This allows requests from any domain https://covenant-reformed-ministry-ethiopia.onrender.com
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
 };
@@ -146,6 +146,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
 app.get('/books', async (req, res) => {
   try {
     const books = await Book.find();
+    console.log(books)
     res.json(books);
   } catch (error) {
     console.error(error.message);
@@ -154,46 +155,34 @@ app.get('/books', async (req, res) => {
 });
 
 // Download route
-app.get("/download/:bookId", async (req, res) => {
-  const { bookId } = req.params;
-
+// Example download route
+app.get('/download/:bookId', async (req, res) => {
   try {
-    // Find the book by ID
+    const { bookId } = req.params;
+
+    // Fetch the book from DB
     const book = await Book.findById(bookId);
 
-    // Check if the book exists
-    if (!book) {
-      return res.status(404).json({
-        message: "Book not found",
-      });
+    if (!book || !book.finalDownloadUrl) {
+      return res.status(404).send('Download link not found');
     }
 
-    // Check if the book has a final download URL
-    if (!book.finalDownloadUrl) {
-      return res.status(400).json({
-        message: "No download URL available for this book",
-      });
-    }
+    // Redirect the browser directly to the final download link
+    res.redirect(book.finalDownloadUrl);
 
-    // Send response with the download URL
-    res.json({
-      message: "You are logged in and authorized to download.",
-      downloadUrl: book.finalDownloadUrl,
-    });
-  } catch (error) {
-    // Log the error and send a server error response
-    console.error("Error fetching book details:", error.message);
-    res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error while downloading');
   }
 });
+
+
 
 // MongoDB connection
 const connectToMongoDB = async () => {
   try {
-    const mongoURI ="mongodb+srv://alemuyohannes960:Ethiopia32100@cluster0.qd8t5as.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0";
+    // const mongoURI ="mongodb+srv://alemuyohannes960:Ethiopia32100@cluster0.qd8t5as.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0";
+    mongoURI="mongodb://localhost:27017"
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,

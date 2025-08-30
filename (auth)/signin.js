@@ -10,8 +10,10 @@
 
   // Signin endpoint
   router.post('/signin', async (req, res) => {
+    console.log("Signin request received:", req.body); 
     try {
       const { email, password } = req.body;
+      // console.log(email)
 
       // Validate input
       if (!email || !password) {
@@ -44,15 +46,17 @@
       });
 
       res.status(200).json({
-        message: 'Signin successful.',
-        user: {
-          token:token,
-          id: user._id,
-          fullname: user.fullname,
-          email: user.email,
-          role: user.role,
-        },
-      });
+  success: true,
+  message: 'Signin successful.',
+  user: {
+    token: token,
+    id: user._id,
+    fullname: user.fullname,
+    email: user.email,
+    role: user.role,
+  },
+});
+console.log("hey sys")
     } catch (error) {
       console.error('Error during signin:', error);
       res.status(500).json({ message: error.message });
