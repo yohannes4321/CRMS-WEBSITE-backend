@@ -17,7 +17,8 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'http://localhost:3000', // This allows requests from any domain https://covenant-reformed-ministry-ethiopia.onrender.com
+  origin: '
+https://covenant-reformed-ministry-ethiopia.onrender.com', // This allows requests from any domain https://covenant-reformed-ministry-ethiopia.onrender.com
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
 };
