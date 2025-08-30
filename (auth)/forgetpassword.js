@@ -30,8 +30,8 @@ const ForgetPassword = async (req, res) => {
             from: process.env.EMAIL_USER,  // Sender's email
             to: email,                     // Recipient's email
             subject: 'ShopEasy Reset Your Password',
-            text: `Click the following link to reset your password: https://crms-website-backend.onrender.com/api/reset_password/${user._id}/${token}`
-        };
+            text: `Click the following link to reset your password: https://crms-website-backend.onrender.com/api/reset_password/${user._id}/${token}`  //https://crms-website-backend.onrender.com
+        }; 
 
         // Send the email using nodemailer
         transporter.sendMail(mailOptions, (error, info) => {

@@ -17,7 +17,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'https://covenant-reformed-ministry-ethiopia.onrender.com', // This allows requests from any domain
+  origin: 'https://covenant-reformed-ministry-ethiopia.onrender.com', // This allows requests from any domain https://covenant-reformed-ministry-ethiopia.onrender.com
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
 };
@@ -28,7 +28,7 @@ app.use('/api', authRoutes);
 // Cloudinary configuration
 cloudinary.config({
   cloud_name: "di5zfjqlt",
-  api_key: "925212267277656",
+  api_key: "923363429458227",
   api_secret: "oqaNDaluW1CD-Zrk754j-s-9oLc",
 });
 
