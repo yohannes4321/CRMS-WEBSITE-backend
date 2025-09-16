@@ -17,7 +17,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'https://covenant-reformed-ministry-ethiopia.onrender.com', // This allows requests from any domain https://covenant-reformed-ministry-ethiopia.onrender.com
+  origin: 'https://covenant-reformed-ministry-ethiopia.vercel.app', // This allows requests from any domain https://covenant-reformed-ministry-ethiopia.onrender.com
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
 };
@@ -181,8 +181,9 @@ app.get('/download/:bookId', async (req, res) => {
 // MongoDB connection
 const connectToMongoDB = async () => {
   try {
+    const mongoURI="mongodb+srv://yohannesalemu_db_user:Y6NRhJc01XGpDP8h@cluster0.jfwhl7l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     // const mongoURI ="mongodb+srv://alemuyohannes960:Ethiopia32100@cluster0.qd8t5as.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0";
-    mongoURI="mongodb+srv://alemuyohannes960:Ethiopia32100@cluster0.qd8t5as.mongodb.net/merci?retryWrites=true&w=majority&appName=Cluster0"
+    // mongoURI="mongodb+srv://alemuyohannes960:Ethiopia32100@cluster0.qd8t5as.mongodb.net/merci?retryWrites=true&w=majority&appName=Cluster0"
     await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
