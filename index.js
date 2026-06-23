@@ -17,7 +17,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: 'https://covenant-reformed-ministry-ethiopia.vercel.app', // This allows requests from any domain https://covenant-reformed-ministry-ethiopia.onrender.com
+  origin: ['https://covenant-reformed-ministry-ethiopia.vercel.app', process.env.FRONTEND_URL || 'http://localhost:3000'], // Allow production and local frontend via env
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
 };
@@ -47,17 +47,18 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
-    // Accept all photo files
-    const allowedPhotoTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
-    if (allowedPhotoTypes.includes(file.mimetype)) {
+    // Accept photo files and PDFs
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'application/pdf'];
+    if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only photo files are allowed!'), false);
+      cb(new Error('Only photo and PDF files are allowed!'), false);
     }
   }
 });
 
-// Helper function to upload file to Cloudinary
+// Helper function to upload file to Cloudinary (Commented out since we are using local storage)
+/*
 const uploadFileToCloudinary = async (filePath, fileName) => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
@@ -73,49 +74,42 @@ const uploadFileToCloudinary = async (filePath, fileName) => {
     fs.unlinkSync(filePath);
   }
 };
+*/
 
-// Upload route
-app.post('/upload', upload.single('file'), async (req, res) => {
-  // Check if file is uploaded
-  if (!req.file) {
-    return res.status(400).json({
-      statusCode: 400,
-      message: 'No file uploaded',
-    });
-  }
+// Serve the 'uploads' folder statically so files can be accessed via URL
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Upload route: handles both a photo (cover image) and a file (book PDF)
+app.post('/upload', upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'file', maxCount: 1 }]), async (req, res) => {
   try {
-    // Use custom file name if provided, otherwise default to the uploaded file's original name
-    const customFileName = req.body.fileName || path.parse(req.file.originalname).name;
+    const customFileName = req.body.fileName || (req.files['file'] ? path.parse(req.files['file'][0].originalname).name : 'default');
     console.log("customFileName:", customFileName);
 
-    // Upload file to Cloudinary
-    const uploadedUrl = await uploadFileToCloudinary(req.file.path, customFileName);
-    console.log("uploadedUrl:", uploadedUrl);
+    let localPhotoUrl = null;
+    let localFileUrl = null;
 
-    // Extract description and download URL from the request body
+    // Process uploaded photo (if any)
+    if (req.files && req.files['photo'] && req.files['photo'].length > 0) {
+      localPhotoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.files['photo'][0].filename}`;
+      console.log("Uploaded Photo URL (Local):", localPhotoUrl);
+    }
+
+    // Process uploaded file (if any)
+    if (req.files && req.files['file'] && req.files['file'].length > 0) {
+      localFileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.files['file'][0].filename}`;
+      console.log("Uploaded File URL (Local):", localFileUrl);
+    }
+
+    // Extract description from the request body
     const description = req.body.description;
-    const downloadUrl = req.body.url;
     console.log("description:", description);
-
-    // Function to extract the file ID from the Google Drive download URL
-    const extractFileId = (downloadUrl) => {
-      const regex = /\/d\/([a-zA-Z0-9_-]+)/; // Regular expression to match the file ID
-      const match = downloadUrl.match(regex);
-      return match ? match[1] : null; // Return the file ID if found, otherwise return null
-    };
-
-    // Generate the final download URL
-    const fileId = downloadUrl ? extractFileId(downloadUrl) : null;
-    const finalDownloadUrl = fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : null;
-    console.log("finalDownloadUrl:", finalDownloadUrl);
 
     // Create a new Book instance
     const newBook = new Book({
       filename: customFileName,
-      uploadedUrl: uploadedUrl, // Cloudinary URL
+      uploadedUrl: localPhotoUrl, // Store the local server URL for the cover photo
       description,
-      finalDownloadUrl: finalDownloadUrl,
+      finalDownloadUrl: localFileUrl, // Store the local server URL for the PDF/file download
     });
     console.log("Book:", newBook);
 
@@ -125,9 +119,10 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     // Return success response
     res.status(200).json({
       statusCode: 200,
-      message: 'File uploaded successfully',
+      message: 'Files uploaded successfully',
       data: {
-        url: uploadedUrl,
+        photoUrl: localPhotoUrl,
+        fileUrl: localFileUrl,
       },
     });
   } catch (error) {
@@ -136,7 +131,6 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     res.status(500).json({
       statusCode: 500,
       message: 'Error uploading file',
-      
       error: error.message,
     });
   }
@@ -151,6 +145,26 @@ app.get('/books', async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ message: 'Error fetching books' });
+  }
+});
+
+// Delete a book
+app.delete('/books/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedBook = await Book.findByIdAndDelete(id);
+    if (!deletedBook) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+    
+    // Optionally delete the local files here using fs.unlinkSync if needed
+    // if (deletedBook.uploadedUrl) ...
+    // if (deletedBook.finalDownloadUrl) ...
+
+    res.status(200).json({ message: 'Book deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting book:', error.message);
+    res.status(500).json({ message: 'Error deleting book' });
   }
 });
 
@@ -181,13 +195,8 @@ app.get('/download/:bookId', async (req, res) => {
 // MongoDB connection
 const connectToMongoDB = async () => {
   try {
-    const mongoURI="mongodb+srv://yohannesalemu_db_user:Y6NRhJc01XGpDP8h@cluster0.jfwhl7l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-    // const mongoURI ="mongodb+srv://alemuyohannes960:Ethiopia32100@cluster0.qd8t5as.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0";
-    // mongoURI="mongodb+srv://alemuyohannes960:Ethiopia32100@cluster0.qd8t5as.mongodb.net/merci?retryWrites=true&w=majority&appName=Cluster0"
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const mongoURI = process.env.MONGO_DB_URI || "mongodb+srv://yohannesalemu_db_user:Y6NRhJc01XGpDP8h@cluster0.jfwhl7l.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+    await mongoose.connect(mongoURI);
     console.log('MongoDB connected successfully');
   } catch (error) {
     console.error(`MongoDB connection error: ${error.message}`);

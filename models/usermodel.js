@@ -37,14 +37,13 @@ const userSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to enforce email uniqueness case-insensitively
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('email')) return next();
+userSchema.pre('save', async function () {
+  if (!this.isModified('email')) return;
   
   const existingUser = await mongoose.models.User.findOne({ email: this.email.toLowerCase() });
   if (existingUser) {
     throw new Error('Email is already registered.');
   }
-  next();
 });
 
 module.exports = mongoose.model('User', userSchema);
